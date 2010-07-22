@@ -12,12 +12,7 @@ var createDeserializer = require('./deserialize').createDeserializer;
 exports.createPacket = function( src ){
 	var Packet;
 	if( src ){
-		try {
-			Packet = AMFPacket.deserialize( src );
-		}
-		catch( e ){
-			throw new Error('Invalid AMF packet: '+e.message);
-		}
+		Packet = AMFPacket.deserialize( src );
 	}
 	if( ! Packet ){
 		Packet = new AMFPacket;
@@ -104,8 +99,8 @@ AMFPacket.deserialize = function( src ){
 	var Packet = new AMFPacket();
 	var d = createDeserializer( src );
 	var v = d.readU16();
-	if( v !== 3 ){
-		throw new Error('Only AMF3 is supported, got '+v.toString() );
+	if( v !== amf.AMF0 && v !== amf.AMF3 ){
+		throw new Error('Invalid AMF packet');
 	}
 	// read headers
 	var nheaders = d.readU16();
