@@ -36,7 +36,7 @@ exports.start = function( listenPort, listenHost, methods ){
 	function onRequest( req, res ){
 	
 		// we must work in binary, UTF-8 strings will be handled by deserializer
-		req.setBodyEncoding('binary');
+		req.setEncoding('binary');
 
 		// collect body on data events
 		var body = '';
@@ -79,7 +79,7 @@ exports.start = function( listenPort, listenHost, methods ){
 					// errors respond with an onStatus method request to the client - no responseURI required
 					catch( Er ){
 						//sys.puts('Error: ' + Er.message);
-						responseMessage = createMessage( [Er.message], requestMessage.responseURI+'/onStatus', '' );
+						responseMessage = createMessage( Er.message, requestMessage.responseURI+'/onStatus', '' );
 					}
 					responsePacket.messages.push( responseMessage );
 				}
@@ -87,7 +87,7 @@ exports.start = function( listenPort, listenHost, methods ){
 				var bin = responsePacket.serialize();
 				//sys.puts( utils.hex(bin) );
 				//sys.puts( sys.inspect(responsePacket) );
-				res.writeHeader( 200, {
+				res.writeHead( 200, {
 					'Content-Type': 'application/amf',
 					'Content-Length': bin.length 
 				} );
@@ -95,10 +95,10 @@ exports.start = function( listenPort, listenHost, methods ){
 			}
 			catch( e ){
 				//sys.puts( 'Error: ' + e.message );
-				res.writeHeader( 500, {'Content-Type': 'text/plain'} );
+				res.writeHead( 500, {'Content-Type': 'text/plain'} );
 				res.write( 'Error serializing AMF packet:\n' + e.message );
 			}
-			res.close();
+			res.end();
 		} );
 	}
 	
