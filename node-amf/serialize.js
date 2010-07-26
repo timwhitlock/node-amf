@@ -98,7 +98,7 @@ AMFSerializer.prototype.writeValue = function( value ){
 	if( 'string' === typeof value ){
 		return this.writeUTF8( value, true );
 	}
-	// numbers // @todo - can we switch between ints and floats?
+	// numbers
 	if( 'number' === typeof value ){
 		return this.writeNumber( value, true );
 	}
@@ -110,7 +110,10 @@ AMFSerializer.prototype.writeValue = function( value ){
 	if( 'function' === typeof value.push ){
 		return this.writeArray( value );
 	}
-	// @todo special types, such as Date object
+	// special object types
+	if( value instanceof Date ){
+		return this.writeDate( value );
+	}
 	// else write vanilla Object
 	return this.writeObject( value );
 }
@@ -224,12 +227,25 @@ AMFSerializer.prototype.writeObject = function( value ){
 
 
 
+/** */ 
+AMFSerializer.prototype.writeDate = function( d ){
+	if( this.version !== amf.AMF3 ){
+		throw new Error("This library doesn't support AMF0 objects, use AMF3");
+	}
+	this.writeU8( amf.AMF3_DATE );	
+	this.writeU29( 1 );
+	return this.writeDouble( d.getTime() );
+}
+
+
+
+
 
 /** */
 AMFSerializer.prototype.writeNumber = function( value, writeMarker ){
 	// serialize as integers if possible
 	var n = parseInt( value );
-	if( n === value ){
+	if( n === value && n >= 0 && n < 0x20000000 ){
 		return this.writeU29( value, writeMarker );
 	}
 	return this.writeDouble( value, writeMarker );

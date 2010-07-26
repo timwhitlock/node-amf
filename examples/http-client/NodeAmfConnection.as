@@ -36,8 +36,8 @@ package {
 			addEventListener( SecurityErrorEvent.SECURITY_ERROR, onError );
 			proxyType = 'HTTP';
 			// call all available AMF methods defined by the gateway
-			call("test", responder );
-			call("echo", responder, 'a£b' );
+			//call("test", responder );
+			call("echo", responder, "a£b" );
 		}
 		
 		

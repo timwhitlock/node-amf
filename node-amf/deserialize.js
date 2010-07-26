@@ -211,6 +211,8 @@ AMFDeserializer.prototype.readValue = function( version ){
 			return this.readArray();
 		case amf.AMF3_OBJECT:
 			return this.readObject();
+		case amf.AMF3_DATE:
+			return this.readDate();
 		case amf.AMF3_BYTE_ARRAY:
 			throw new Error('ByteArrays not yet supported, sorry');
 			//return this.readByteArray();
@@ -232,6 +234,8 @@ AMFDeserializer.prototype.readValue = function( version ){
 			return this.readBoolean();
 		case amf.AMF0_STRICT_ARRAY:
 			return this.readStrictArray();
+		case amf.AMF0_DATE:
+			return this.readDate();	
 		default:
 			throw new Error('Type error, unsupported AMF0 marker: 0x' +utils.leftPad(marker.toString(16),2,'0')+ ', offset '+this.i);
 		}
@@ -341,7 +345,7 @@ AMFDeserializer.prototype.readObject = function(){
 			}
 		}
 		// index this instance
-		this.refTra.push( Obj );
+		this.refObj.push( Obj );
 	} 
 	// else object reference ( U29O-ref )
 	else {
@@ -353,6 +357,30 @@ AMFDeserializer.prototype.readObject = function(){
 	}
 	return Obj;
 }
+
+
+/** */
+AMFDeserializer.prototype.readDate = function(){
+	var u, d;
+	// check if instance follows (U29O-ref)
+	var n = this.readU29();
+	if( n & 1 ){
+		// create and index a new date object
+		u = this.readDouble();
+		d = new Date( u );
+		this.refObj.push( d );
+	}
+	else {
+		var idx = n >> 1;
+		if( this.refObj[idx] == null || ! this.refObj[idx] instanceof Date ){
+			throw new Error("No date object reference at index "+idx+", offset "+this.i);
+		}
+		d = this.refObj[idx];
+	}
+	return d;
+}
+
+
 
 
 

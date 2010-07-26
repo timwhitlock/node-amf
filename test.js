@@ -23,8 +23,8 @@ Packet.addHeader( 'header 1', 'Example header' );
 // create a construct containing various data types
 var struct = { 
 	strings: [ 'Hello World', '£' ], 
-	numbers: [ Number.MIN_VALUE, -20000, -1, 0, 0.0123456, 2000000, 1234.5678, Number.MAX_VALUE, Number.NaN ], 
-	objects: [ ,{}, ],
+	numbers: [ Number.MIN_VALUE, -1234.5, -20000, -1, 0, 0.0123456, 2000000, 1234.5678, Number.MAX_VALUE, Number.NaN ], 
+	objects: [ ,{}, new Date, new Date(0) ],
 	others: [ true, false, null, undefined ]
 };
 
@@ -44,6 +44,7 @@ sys.puts( utils.hex( bin ) );
 // now attempt to deserialize the packet and get the data back
 Packet = amf.packet( bin );
 sys.puts( sys.inspect(Packet) );
+sys.puts( sys.inspect(Packet.messages[0]) );
 
 
 

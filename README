@@ -1,5 +1,7 @@
-node-amf  - AMF library for NodeJS
-@author Tim Whitlock
+node-amf 
+--------
+AMF library for NodeJS
+@author Tim Whitlock http://twitter.com/timwhitlock
 
-The library files are under node-amf directory
-
+Run "node test.js" to perform a simple serialize & deserialize test
+see the examples directory for client/server tests
