@@ -13,7 +13,7 @@
  * Most basic method simply returns the string "Hello World"
  */ 
 exports.test = function(){
-	return 'Hello World';
+    return 'Hello World';
 }
 
 
@@ -21,7 +21,7 @@ exports.test = function(){
  * Send back whatever was sent to us
  */
 exports.echo = function(){
-	return arguments;
+    return arguments;
 }
 
 

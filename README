@@ -3,5 +3,13 @@ node-amf
 AMF library for NodeJS
 @author Tim Whitlock http://twitter.com/timwhitlock
 
+Currently in development and unstable. Do not use in production
+
 Run "node test.js" to perform a simple serialize & deserialize test
 see the examples directory for client/server tests
+
+
+Known issues
+------------
+There are bugs packing and unpacking floating point numbers. This relies on the 
+pack and unpack functions taken from the php.js project, which appear to have problems
