@@ -9,6 +9,7 @@ var amf = require('./amf');
 var utils = require('./utils');
 var utf8 = require('./utf8');
 var unpack = require('./unpack').unpack;
+var bin = require('./bin');
 var createHeader  = require('./header').createHeader;
 var createMessage = require('./message').createMessage;
 
@@ -27,6 +28,7 @@ function AMFDeserializer( src ){
 	this.s = src || '';
 	this.i = 0;
 	this.resetRefs();
+	this.binParser = bin.parser( false, true ); 
 }
 
 
@@ -87,14 +89,8 @@ AMFDeserializer.prototype.readU32 = function(){
 /** */
 AMFDeserializer.prototype.readDouble = function(){
 	var s = this.shiftBytes(8);
-	// big endian requires byte reversal
-	s = utils.reverseString(s);
-	//sys.puts('readDouble ['+escape(s)+']');
-	var unpacked = unpack('dflt',s);
-	if( ! unpacked || unpacked.flt == null ){
-		throw new Error('Failed to read double, ending at offset '+this.i);
-	}
-	return unpacked.flt;
+	var n = this.binParser.toDouble( s );
+	return n;
 }
 
 

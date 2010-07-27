@@ -9,6 +9,7 @@ var amf = require('./amf');
 var utils = require('./utils');
 var utf8 = require('./utf8');
 var pack = require('./pack').pack;
+var bin = require('./bin');
 
 
 exports.createSerializer = function( v ){
@@ -23,6 +24,7 @@ function AMFSerializer( v ){
 	this.version = v;
 	this.s = '';
 	this.resetRefs();
+	this.binParser = bin.parser( false, true ); 
 }
 
 
@@ -260,8 +262,15 @@ AMFSerializer.prototype.writeDouble = function( value, writeMarker ){
 		var marker = this.version === amf.AMF3 ? amf.AMF3_DOUBLE : amf.AMF0_NUMBER;
 		this.writeU8( marker );
 	}
-	var s = pack('d',value);
-	return this.s += utils.reverseString(s);
+	// support for NaN as double "00 00 00 00 00 00 F8 7F"
+	if( isNaN(value) ){
+		this.s += '\0\0\0\0\0\0\xF8\x7F';
+		//this.s += '\x7F\xF8\0\0\0\0\0\0';
+	}
+	else {
+		this.s += this.binParser.fromDouble( value );
+	}
+	return this.s;
 }
 
 
