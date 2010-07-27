@@ -36,8 +36,18 @@ package {
 			addEventListener( SecurityErrorEvent.SECURITY_ERROR, onError );
 			proxyType = 'HTTP';
 			// call all available AMF methods defined by the gateway
-			//call("test", responder );
-			call("echo", responder, "a£b" );
+			call("test", responder );
+			// test a complex structure with all data types
+			call( "echo", responder, 
+				 //strings
+				 'Hello World', 'a£b', 
+				 // numbers
+				 Number.MIN_VALUE, -1234.5, -20000, -1, 0, 0.0123456, 2000000, 1234.5678, Number.MAX_VALUE, Number.NaN,
+				 // objects 
+				 [ ,,{ test:'OK'}, new Date, new Date(0) ],
+				 // other scalars
+				 true, false, null, undefined
+			);
 		}
 		
 		
@@ -66,9 +76,9 @@ package {
 		}
 		
 		/** Successful Response handler - simple trace of top-level response data */
-		public function onResponse( returnValue:Object ):void{
-			// @todo full dump .... 
-			trace('[onResponse] ('+typeof returnValue+') "'+String(returnValue)+'"');
+		public function onResponse( returnValue:Object, s:Object = ''):void {
+			trace('[onResponse] '+s);
+			dump( returnValue, '', '' );
 		}
 		
 		
@@ -77,6 +87,41 @@ package {
 			trace('[onFault] `'+ ( f as String ) + '`');
 		}
 		
+		
+		/** simple dump function for inspecting returned structures */
+		private static function dump( value:*, tab:String = '', name:String = '' ):void {
+			var prefix:String = tab;
+			if( name ){
+				prefix += '['+name+'] ';
+			}
+			if( value === undefined ){
+				return trace( prefix + '(undefined)' );
+			}
+			if( value === null ){
+				return trace( prefix + '(null)' );
+			}
+			if( value is Number ){
+				return trace( prefix + '(Number) '+ value );
+			}
+			if( value is String ){
+				return trace( prefix + '(String) "'+ value+'"' );
+			}
+			if( value is Boolean ){
+				return trace( prefix + '(Boolean) '+ (value?'true':'false') );
+			}
+			if( value is Date ){
+				return trace( prefix + '(Date) '+ (value as Date).toString() );
+			}
+			if( value is Array || value.length ){
+				trace( prefix + '(Array length:'+value.length+') ');
+			}
+			else {
+				trace( prefix + '(Object)');
+			}
+			for( var s:String in value ){
+				dump( value[s], ' . '+tab, s );
+			}
+		}		
 		
 		
 	}
