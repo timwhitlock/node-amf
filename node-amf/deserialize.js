@@ -4,19 +4,16 @@
 
 
 /** dependencies */ 
-var sys = require('sys');
 var amf = require('./amf');
 var utils = require('./utils');
 var utf8 = require('./utf8');
 var unpack = require('./unpack').unpack;
 var bin = require('./bin');
-var createHeader  = require('./header').createHeader;
-var createMessage = require('./message').createMessage;
 
 
-exports.createDeserializer = function( src ){
-	return new AMFDeserializer( src );
-}
+/** export constructor */
+exports.AMFDeserializer = AMFDeserializer;
+
 
 
 // ----------------------------------
@@ -297,7 +294,8 @@ AMFDeserializer.prototype.readObject = function(){
 	if( n & 1 ){
 		// check if trait data follows
 		if( n & 2 ){
-			Traits = new amf.Traits;
+			Traits = amf.traits();
+			this.refTra.push( Traits );			
 			// check if traits externalizable follows (U29O-traits-ext)
 			if( n & 4 ){
 				Traits.clss = this.readUTF8( amf.AMF3 );
@@ -316,8 +314,6 @@ AMFDeserializer.prototype.readObject = function(){
 					Traits.props.push( prop );
 				}
 			}
-			// index traits object
-			this.refTra.push( Traits );
 		}
 		// else trait reference (U29O-traits-ref)
 		else {
@@ -330,6 +326,7 @@ AMFDeserializer.prototype.readObject = function(){
 		// Have traits - Construct instance
 		// @todo support class mapping somehow?
 		var prop, Obj = {};
+		this.refObj.push( Obj );	
 		for( var i = 0; i < Traits.props; i++ ){
 			prop = Traits.props[i];
 			Obj[prop] = this.readValue( amf.AMF3 );
@@ -340,8 +337,6 @@ AMFDeserializer.prototype.readObject = function(){
 				Obj[prop] = this.readValue( amf.AMF3 );
 			}
 		}
-		// index this instance
-		this.refObj.push( Obj );
 	} 
 	// else object reference ( U29O-ref )
 	else {
@@ -408,8 +403,9 @@ AMFDeserializer.prototype.readByteArray = function(){
  * @return AMFHeader
  */
 AMFDeserializer.prototype.readHeader = function(){
+	this.resetRefs();
 	var name = this.readUTF8( amf.AMF0 );
-	var Header = createHeader( name, '' );
+	var Header = amf.header( name, '' );
 	Header.mustunderstand = Boolean( this.readU8() );
 	var len = this.readU32(); // we won't actually use the length
 	// @todo lazy creation of header by storing known header byte length
@@ -423,7 +419,8 @@ AMFDeserializer.prototype.readHeader = function(){
  * @return AMFMessage
  */
 AMFDeserializer.prototype.readMessage = function(){
-	var Msg = new createMessage('','','');
+	this.resetRefs();
+	var Msg = amf.message('','','');
 	// request URI - AMF0 UTF-8
 	Msg.requestURI = this.readUTF8( amf.AMF0 );
 	// response URI - AMF0 UTF-8

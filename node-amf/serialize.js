@@ -12,9 +12,7 @@ var pack = require('./pack').pack;
 var bin = require('./bin');
 
 
-exports.createSerializer = function( v ){
-	return new AMFSerializer( v );
-}
+exports.AMFSerializer = AMFSerializer;
 
 
 // ----------------------------------
@@ -37,14 +35,15 @@ AMFSerializer.prototype.toString = function(){
 
 /** */
 AMFSerializer.prototype.resetRefs = function(){
-	this.refObj = {}; // object references
-	this.refStr = {}; // string references
-	this.refTra = {}; // trait references
+	this.refObj = []; // object references
+	this.refStr = []; // string references
+	this.refTra = []; // trait references
 }
 
 
 /** */
 AMFSerializer.prototype.writeHeader = function ( Header ){
+	this.resetRefs();
 	// header must be AMF0
 	var v = this.version;
 	this.version = amf.AMF0;
@@ -62,6 +61,7 @@ AMFSerializer.prototype.writeHeader = function ( Header ){
 
 /** */
 AMFSerializer.prototype.writeMessage = function ( Message, v ){
+	this.resetRefs();
 	// message wrappers must be AMF0
 	var vv = this.version;
 	this.version = amf.AMF0;
@@ -213,12 +213,20 @@ AMFSerializer.prototype.writeObject = function( value ){
 		throw new Error("This library doesn't support AMF0 objects, use AMF3");
 	}
 	this.writeU8( amf.AMF3_OBJECT );
-	// Start flag with instance, no traits, no externalizable
+	// support object references
+	if( value.__amfidx != null ){
+		var n = ( value.__amfidx << 1 );
+		return this.writeU29( n );
+	}
+	// else index object reference
+	value.__amfidx = this.refObj.length;
+	this.refObj.push( value );
+	// flag with instance, no traits, no externalizable
 	this.writeU29( 11 );
 	this.writeUTF8('Object');
 	// write serializable properties
 	for( var s in value ){
-		if( typeof value[s] !== 'function' ){
+		if( typeof value[s] !== 'function' && s !== '__amfidx' ){
 			this.writeUTF8(s);
 			this.writeValue( value[s] );
 		}
@@ -265,7 +273,6 @@ AMFSerializer.prototype.writeDouble = function( value, writeMarker ){
 	// support for NaN as double "00 00 00 00 00 00 F8 7F"
 	if( isNaN(value) ){
 		this.s += '\0\0\0\0\0\0\xF8\x7F';
-		//this.s += '\x7F\xF8\0\0\0\0\0\0';
 	}
 	else {
 		this.s += this.binParser.fromDouble( value );

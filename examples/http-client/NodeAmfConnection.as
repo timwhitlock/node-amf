@@ -35,6 +35,7 @@ package {
 			addEventListener( AsyncErrorEvent.ASYNC_ERROR, onError );
 			addEventListener( SecurityErrorEvent.SECURITY_ERROR, onError );
 			proxyType = 'HTTP';
+			/*
 			// call all available AMF methods defined by the gateway
 			call("test", responder );
 			// test a complex structure with all data types
@@ -48,6 +49,12 @@ package {
 				 // other scalars
 				 true, false, null, undefined
 			);
+			*/
+			// test a cyclic reference
+			var cyclic = { test:'ok' };
+			cyclic.self = cyclic;
+			call( "echo", responder, cyclic );
+			
 		}
 		
 		
@@ -112,6 +119,10 @@ package {
 			if( value is Date ){
 				return trace( prefix + '(Date) '+ (value as Date).toString() );
 			}
+			if( value.__amfref != null ){
+				return trace( prefix + '(Cyclic)' );
+			}
+			value.__amfref = true;
 			if( value is Array || value.length ){
 				trace( prefix + '(Array length:'+value.length+') ');
 			}
@@ -119,7 +130,9 @@ package {
 				trace( prefix + '(Object)');
 			}
 			for( var s:String in value ){
-				dump( value[s], ' . '+tab, s );
+				if( s !== '__amfref' ){
+					dump( value[s], ' . '+tab, s );
+				}
 			}
 		}		
 		

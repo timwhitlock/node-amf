@@ -3,9 +3,9 @@
 var amf = require('./amf');
 
 
-exports.createHeader = function( name, value ){
-	return new AMFHeader( name, value );
-}
+/** export constructor */
+exports.AMFHeader = AMFHeader;
+
 
 
 // ----------------------------------

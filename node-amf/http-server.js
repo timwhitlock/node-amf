@@ -8,7 +8,6 @@ var http = require('http');
 // Require node-amf module libraries
 var amf = require('./amf');
 var utils = require('./utils');
-var createMessage = require('./message').createMessage;
 
 
 /**
@@ -74,12 +73,12 @@ exports.start = function( listenPort, listenHost, methods ){
 						}
 						// call function and create response message with return value
 						retval = func.apply( null, args );
-						responseMessage = createMessage( retval, requestMessage.responseURI+'/onResult', '' );
+						responseMessage = amf.message( retval, requestMessage.responseURI+'/onResult', '' );
 					}
 					// errors respond with an onStatus method request to the client - no responseURI required
 					catch( Er ){
-						//sys.puts('Error: ' + Er.message);
-						responseMessage = createMessage( Er.message, requestMessage.responseURI+'/onStatus', '' );
+						sys.puts('Error: ' + Er.message);
+						responseMessage = amf.message( Er.message, requestMessage.responseURI+'/onStatus', '' );
 					}
 					responsePacket.messages.push( responseMessage );
 				}
@@ -94,7 +93,7 @@ exports.start = function( listenPort, listenHost, methods ){
 				res.write( bin, "binary" );
 			}
 			catch( e ){
-				//sys.puts( 'Error: ' + e.message );
+				sys.puts( 'Error: ' + e.message );
 				res.writeHead( 500, {'Content-Type': 'text/plain'} );
 				res.write( 'Error serializing AMF packet:\n' + e.message );
 			}
