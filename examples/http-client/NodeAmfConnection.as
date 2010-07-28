@@ -35,7 +35,6 @@ package {
 			addEventListener( AsyncErrorEvent.ASYNC_ERROR, onError );
 			addEventListener( SecurityErrorEvent.SECURITY_ERROR, onError );
 			proxyType = 'HTTP';
-			/*
 			// call all available AMF methods defined by the gateway
 			call("test", responder );
 			// test a complex structure with all data types
@@ -49,12 +48,12 @@ package {
 				 // other scalars
 				 true, false, null, undefined
 			);
-			*/
-			// test a cyclic reference
-			var cyclic = { test:'ok' };
-			cyclic.self = cyclic;
-			call( "echo", responder, cyclic );
-			
+			// test cyclic references; Array and Object
+			var cyclicObj = { test:'ok' };
+			cyclicObj.self = cyclicObj;
+			var cyclicArr = [ 'hello world' ];
+			cyclicArr.push( cyclicArr );
+			call( "echo", responder, cyclicObj, cyclicArr );
 		}
 		
 		

@@ -259,6 +259,7 @@ AMFDeserializer.prototype.readArray = function(){
 	var n = this.readU29();
 	// reference or value
 	if( n & 1 ){
+		this.refObj.push(a);
 		// count dense portion
 		var len = n >> 1;
 		// iterate over over associative portion, until empty string terminates
@@ -270,8 +271,6 @@ AMFDeserializer.prototype.readArray = function(){
 		for( var i = 0; i < len; i++ ){
 			a.push( this.readValue( amf.AMF3 ) );
 		}
-		// index this instance
-		this.refObj.push(a);
 	}
 	// else is reference index
 	else {

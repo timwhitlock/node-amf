@@ -187,8 +187,16 @@ AMFSerializer.prototype.writeArray = function( value ){
 	// AMF3
 	if( this.version === amf.AMF3 ){
 		this.writeU8( amf.AMF3_ARRAY );
+		// support object references
+		if( value.__amfidx != null ){
+			var n = ( value.__amfidx << 1 );
+			return this.writeU29( n );
+		}
+		// else index object reference
+		value.__amfidx = this.refObj.length;
+		this.refObj.push( value );
 		// flag with XXXXXXX1 indicating length of dense portion with instance
-		var flag = ( len<<1 ) | 1;
+		var flag = ( len << 1 ) | 1;
 		this.writeU29( flag );
 		// no assoc values in JavaScript - end with empty string
 		this.writeUTF8('');
