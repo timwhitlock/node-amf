@@ -32,6 +32,7 @@ package {
 			addEventListener( IOErrorEvent.IO_ERROR, onError );
 			addEventListener( AsyncErrorEvent.ASYNC_ERROR, onError );
 			addEventListener( SecurityErrorEvent.SECURITY_ERROR, onError );
+			objectEncoding = ObjectEncoding.AMF3;
 			connect(host);
 		}
 
