@@ -10,7 +10,6 @@ var sys = require('sys');
 // require node-amf module libraries from relative directory path
 var amf = require('./node-amf/amf');
 var utils = require('./node-amf/utils');
-var utf8 = require('./node-amf/utf8');
 
 
 

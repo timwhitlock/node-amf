@@ -4,13 +4,6 @@
 var sys = require('sys');
 var net = require('net');
 
-var utils = require('../../node-amf/utils');
-var amf = require('../../node-amf/amf');
-var bin = require('../../node-amf/bin');
-var pack = require('../../node-amf/pack').pack;
-var unpack = require('../../node-amf/unpack').unpack;
-
-
 var RtmpConnection = require('../../node-rtmp/RtmpConnection').RtmpConnection;
 
 
@@ -22,6 +15,7 @@ var server = net.createServer();
 /** */
 server.addListener('connection', function( socket ) {
 	try {
+		sys.puts('server.connection');
 		new RtmpConnection( socket );
 	}
 	catch( Er ){
@@ -33,27 +27,10 @@ server.addListener('connection', function( socket ) {
 
 /** */
 server.addListener('close', function(errno) {
-	sys.puts('server:close '+errno);
+	sys.puts('server.close '+errno);
 } );
 
 
 
 server.listen( 1935, "192.168.51.6" );
 sys.puts('Server ready');
-
-
-
-
-// utility
-function randomness( len ){
-	var s = '';
-	for( var i = 0; i < len; i++ ){
-		 s += String.fromCharCode( Math.round( 255 * Math.random() ) );
-	}
-	return s;
-}
-
-
-
-
-
