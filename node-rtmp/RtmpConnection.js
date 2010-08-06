@@ -22,6 +22,8 @@ function RtmpConnection( socket ){
 	this.handShake = null;
 	this.messageStreams = [];
 	this.chunkStreams = [];
+	// temporary buffer for incomplete packets
+	this.buffer = '';
 	// listen for data
 	var Conn = this;
 	socket.addListener( 'data', function(data){ 
@@ -55,7 +57,7 @@ function RtmpConnection( socket ){
  * Common socket writing function
  */
 RtmpConnection.prototype.write = function( data ){
-	this.socket.write( data, 'binary' );
+	return this.socket.write( data, 'binary' );
 }
 
 
@@ -70,52 +72,53 @@ RtmpConnection.prototype.onSocketData = function( data ){
 		sys.puts('socket.data [length:'+data.length+']');
 		// complete handshake if not already
 		if( ! this.handShake ){
+			// wait for full 1537 bytes
+			this.buffer += data;
+			if( this.buffer.length < 1537 ){
+				return;
+			}
 			sys.puts('# handshake 1');
 			this.handShake = new RtmpHandshake();
 			//sys.puts( sys.inspect(this.handShake) );
-			response = this.handShake.initialize(data);
+			response = this.handShake.initialize( this.buffer );
+			this.buffer = '';
 			return this.write( response );
 		}
 		if( ! this.handShake.acknowledged ){
+			// wait for at least 1536 bytes
+			this.buffer += data;
+			if( this.buffer.length < 1536 ){
+				return;				
+			}
 			sys.puts('# handshake 2');
-			response = this.handShake.acknowledge(data)
+			response = this.handShake.acknowledge( this.buffer );
 			//sys.puts( sys.inspect(this.handShake) );
 			this.write( response );
-			data = data.slice(1536);
+			data = this.buffer.slice(1536);
+			this.buffer = '';
 		}
-		while( data ){
-			sys.puts('# processing chunk, have '+data.length+' bytes');
-			sys.puts( utils.hex(data,16) );
-			// process a chunk
-			var Chunk = new RtmpChunk( data );
-			// add to stream and inherit any known properties
-			var Stream = this.chunkStreams[Chunk.chunkStreamId];
-			if( Stream ){
-				Chunk.inheritStream( Stream );
-			}
-			else {
-				Stream = this.chunkStreams[Chunk.chunkStreamId] = [];
-			}
-			Stream.push( Chunk );
-			// parse chunk returning any leftover chunk data
-			data = Chunk.parse( data );
-			sys.puts( sys.inspect(Chunk) );
+		
+		sys.puts('# processing chunk, have '+data.length+' bytes');
+		//sys.puts( utils.hex(data,16) );
+		// process a chunk
+		var Chunk = new RtmpChunk( data );
+		// add to stream and inherit any known properties
+		var Previous = this.chunkStreams[Chunk.chunkStreamId];
+		if( Previous ){
+			Chunk.inheritPrevious( Previous );
+		}
+		else {
+			this.chunkStreams[Chunk.chunkStreamId] = Previous;
+		}
+		Chunk.parse( data );
+		if( Chunk.payload.length >= Chunk.messageLen ){
+			sys.puts('# processing message, have '+Chunk.payload.length+'/'+Chunk.messageLen+' bytes');
+			var Msg = new RtmpMessage( Chunk.payload, Chunk.messageLen );
 		}
 	}
 	catch( Er ){
 		sys.puts( 'Error onSocketData: '+Er.message );
 	}
-	// @todo I AM HERE - testing message parsing with first single message chunk
-		
-	// @todo getting rogue 0xC3 bytes - something to do with byte allignment?
-	if( Chunk.messageLen < Chunk.message.length ){
-		sys.puts( Chunk.messageLen +' < '+ Chunk.message.length );
-		// hack out 0xC3s?????
-		Chunk.message = Chunk.message.split('\xC3').join('');
-	}
-	
-	
-	var Msg = new RtmpMessage( Chunk.message );
 }
 
 

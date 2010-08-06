@@ -26,6 +26,7 @@ var leParser = bin.parser( false, true ); // little endian binary parser
  * Constructor
  */
 function RtmpChunk( data ){
+	this.payload = '';
 	// 6.1.1 chunk basic header - defines stream id and chunk type
 	var b1 = data.charCodeAt(0);
 	this.chunkStreamId = b1 & 63; // <- (0-5) 6 bit mask
@@ -68,9 +69,7 @@ function RtmpChunk( data ){
  * Inherit properties from an existing Chunk
  * @var Array existing chunks in our stream
  */
-RtmpChunk.prototype.inheritStream = function( Stream ){
-	// latest chunk in stream should hold all parameters we need
-	var Previous = Stream[ Stream.length -1 ];
+RtmpChunk.prototype.inheritPrevious = function( Previous ){
 	// format:0 should only be the first chunk in a stream
 	if( this.format === 0 || ! Previous ){
 		return;
@@ -86,6 +85,9 @@ RtmpChunk.prototype.inheritStream = function( Stream ){
 		this.messageLen = Previous.messageLen;
 		this.messageType = Previous.messageType;
 	}
+	// inherit payload and save memory in previous chunk
+	this.payload += Previous.payload;
+	Previous.payload = null;
 }
 
 
@@ -128,15 +130,12 @@ RtmpChunk.prototype.parse = function( data ){
 	if( this.timestamp === 0x00ffffff ){
 		throw new Error('@todo extended timestamp');
 	}
-	
-	// Snip off the message data, and return the next chunk
-	//this.message = data.substr( this.offset + this.headerLen, this.messageLen );
-	//return data.slice( this.offset + this.headerLen + this.messageLen );
-	
-	// @todo really unsure about this, I'm getting message length falling short of bytes available, should be the opposite?
-	this.message = data.slice( this.offset + this.headerLen );
-	return '';
-}
+	// Snip off the payload, @todo 128 bytes at a time
+	this.payload += data.slice( this.offset + this.headerLen );
+};
+
+
+
 
 
 
