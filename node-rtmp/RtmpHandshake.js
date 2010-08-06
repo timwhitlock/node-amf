@@ -4,7 +4,6 @@ var sys = require('sys');
 
 var utils = require('../node-amf/utils');
 var bin = require('../node-amf/bin');
-var pack = require('../node-amf/pack').pack;
 
 
 // export single class
@@ -13,7 +12,8 @@ exports.RtmpHandshake = RtmpHandshake;
 
 
 // utility to unpack numbers
-var binParser = bin.parser( true, true );
+var beParser = bin.parser( true, true );  // big endian binary parser
+//var leParser = bin.parser( false, true ); // little endian binary parser
 
 
 
@@ -24,10 +24,23 @@ var binParser = bin.parser( true, true );
 function RtmpHandshake( data ){
 	this.acknowledged = false;
 	this.serverRandom = randomString(1528);
-	// @todo unsure what to do about the epoch
+	// take a benchmark and set a zero epoch
+	// this means all timestamps are milliseconds since this moment
+	this.serverBench = ( new Date ).getTime();
 	this.serverEpoch = 0;
 	this.serverEpochStr = '\0\0\0\0';
 }
+
+
+/**
+ * time elapsed since benchmark was taken with 0 epoch
+ * @return Number
+ */
+RtmpHandshake.prototype.timestamp = function(){
+	var t = (new Date).getTime();
+	return ( t - this.serverBench ) - this.serverEpoch;
+}
+
 
 
 
@@ -37,8 +50,6 @@ function RtmpHandshake( data ){
  * @return string data to write in response
  */
 RtmpHandshake.prototype.initialize = function( data ){
-	// take a benchmark straight away
-	this.serverBench = ( new Date ).getTime();
 	if( data.length !== 1537 ){
 		throw new Error('Expecting 1537 octets, got ' + data.length);
 	}
@@ -54,11 +65,8 @@ RtmpHandshake.prototype.initialize = function( data ){
 		throw new Error('Handshake error: zeroed string expected');
 	}
 	this.clientEpochStr = data.slice(1,5);
-	this.clientEpoch = binParser.toInt( this.clientEpochStr );
+	this.clientEpoch = beParser.toInt( this.clientEpochStr );
 	this.clientRandom = data.slice(9);
-	// @todo should we mimic the client's epoch, or define our own?
-	this.serverEpochStr = this.clientEpochStr;
-	this.serverEpoch = this.clientEpoch;
 	// return S0 + S1 packet to respond with
 	return '\3' + this.serverEpochStr + '\0\0\0\0' + this.serverRandom;
 }
@@ -75,10 +83,12 @@ RtmpHandshake.prototype.acknowledge = function( data ){
 	if( this.serverEpochStr !== data.slice(0,4) ){
 		throw new Error('Handshake error: server epoch echo does not match');
 	}
-	this.clientBench = binParser.toInt( data.slice(4,8) ); // always seems to be zero?
+	this.clientBench = beParser.toInt( data.slice(4,8) ); // always seems to be zero?
 	// return S2 packet to respond with
 	this.acknowledged = true;
-	return this.clientEpochStr + pack('N',this.serverBench) + this.clientRandom;
+	// @todo unsure about this timestamp as it will be zero ??
+	var time2 = 0;
+	return this.clientEpochStr + beParser.fromDWord(time2) + this.clientRandom;
 }
 
 

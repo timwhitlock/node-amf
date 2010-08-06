@@ -8,7 +8,6 @@ var sys = require('sys');
 var utils = require('../node-amf/utils');
 var amf = require('../node-amf/amf');
 var bin = require('../node-amf/bin');
-var unpack = require('../node-amf/unpack').unpack;
 
 
 
@@ -18,7 +17,8 @@ exports.RtmpChunk = RtmpChunk;
 
 
 // utility to unpack numbers
-var binParser = bin.parser( true, true );
+var beParser = bin.parser( true, true );  // big endian binary parser
+var leParser = bin.parser( false, true ); // little endian binary parser
 
 
 
@@ -97,28 +97,28 @@ RtmpChunk.prototype.parse = function( data ){
 	this.header = data.substr( this.offset, this.headerLen );
 	// timestamp delta - 3 bytes (always a timestamp, if there's a header at all)
 	if( this.format !== 3 ){
-		this.timestamp = binParser.decodeInt( this.header.slice(0,3), 24, false );
+		this.timestamp = beParser.decodeInt( this.header.slice(0,3), 24, false );
 	}
 	else if( this.timestamp == null ){
 		throw new Error('Chunk has not inherited timestamp from previous chunk in stream');
 	}
 	// message length - 3 bytes / 24 bit unsigned
 	if( this.format === 0 || this.format === 1 ){
-		this.messageLen = binParser.decodeInt( this.header.slice(3,6), 24, false );
+		this.messageLen = beParser.decodeInt( this.header.slice(3,6), 24, false );
 	}
 	else if( this.messageLen == null ){
 		throw new Error('Chunk has not inherited message length from previous chunk in stream');
 	}
 	// message type id - 1 byte  / 8 bit unsigned
 	if( this.format === 0 || this.format === 1 ){
-		this.messageType = binParser.toByte( this.header.slice(6,7) );
+		this.messageType = beParser.toByte( this.header.slice(6,7) );
 	}
 	else if( this.messageType == null ){
 		throw new Error('Chunk has not inherited message type from previous chunk in stream');
 	}
-	// message stream id - 4 bytes (little Endian)
+	// message stream id - unsigned long - 4 bytes (little Endian)
 	if( this.format === 0 ){
-		this.messageStreamId = unpack('Vlong', this.header.slice(7,11) ).long;
+		this.messageStreamId = leParser.toDWord( this.header.slice(7,11) );
 	}
 	else if( this.messageStreamId == null ){
 		throw new Error('Chunk has not inherited message stream id from previous chunk in stream');

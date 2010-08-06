@@ -7,7 +7,6 @@
 var amf = require('./amf');
 var utils = require('./utils');
 var utf8 = require('./utf8');
-var unpack = require('./unpack').unpack;
 var bin = require('./bin');
 
 
@@ -25,7 +24,8 @@ function AMFDeserializer( src ){
 	this.s = src || '';
 	this.i = 0;
 	this.resetRefs();
-	this.binParser = bin.parser( false, true ); 
+	this.beParser = bin.parser( true, true );  // <- big endian binary unpacker
+	this.leParser = bin.parser( false, true ); // <- little endian binary unpacker
 }
 
 
@@ -64,30 +64,21 @@ AMFDeserializer.prototype.readU8 = function(){
 /** */
 AMFDeserializer.prototype.readU16 = function (){
 	var s = this.shiftBytes(2);
-	var unpacked = unpack('nint',s);
-	if( ! unpacked || unpacked.int == null ){
-		throw new Error('Failed to read U16, ending at offset '+this.i);
-	}
-	return unpacked.int;
+	return this.beParser.toWord( s );
 }
 
 
 /** */
 AMFDeserializer.prototype.readU32 = function(){
 	var s = this.shiftBytes(4);
-	var unpacked = unpack('Nint',s);
-	if( ! unpacked || unpacked.int == null ){
-		throw new Error('Failed to read U32, ending at offset '+this.i);
-	}
-	return unpacked.int;
+	return this.beParser.toDWord( s );
 }
 
 
 /** */
 AMFDeserializer.prototype.readDouble = function(){
 	var s = this.shiftBytes(8);
-	var n = this.binParser.toDouble( s );
-	return n;
+	return this.leParser.toDouble( s );
 }
 
 

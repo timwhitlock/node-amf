@@ -1,7 +1,6 @@
 /**
  * This is not a server.
  * This is simply a test script to ensure the node-amf libraries are working.
- * It will output some serialized AMF packets as hex dumps
  */
 
 // require system libraries 

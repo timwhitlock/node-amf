@@ -2,13 +2,11 @@
  * AMF serializer
  */
 
-var sys = require('sys');
 
 /** dependencies */ 
 var amf = require('./amf');
 var utils = require('./utils');
 var utf8 = require('./utf8');
-var pack = require('./pack').pack;
 var bin = require('./bin');
 
 
@@ -22,7 +20,8 @@ function AMFSerializer( v ){
 	this.version = v;
 	this.s = '';
 	this.resetRefs();
-	this.binParser = bin.parser( false, true ); 
+	this.beParser = bin.parser( true, true );  // <- big endian binary packer
+	this.leParser = bin.parser( false, true ); // <- little endian binary packer
 }
 
 
@@ -48,9 +47,9 @@ AMFSerializer.prototype.writeHeader = function ( Header ){
 	var v = this.version;
 	this.version = amf.AMF0;
 	this.writeUTF8( Header.name );
-	this.writeU8( 0 ); // <- @todo Header.mustunderstand?
-	// header of unknown length until serialized
-	this.writeU32( -1 );
+	this.writeU8( Header.mustunderstand ? 1 : 0 );
+	// header of unknown length until serialized (U32)-1
+	this.s += '\xFF\xFF\xFF\xFF';
 	var s = this.writeValue( Header.value );
 	// reinstate version if it wasn't AMF0
 	this.version = v;
@@ -67,8 +66,8 @@ AMFSerializer.prototype.writeMessage = function ( Message, v ){
 	this.version = amf.AMF0;
 	this.writeUTF8( Message.requestURI );
 	this.writeUTF8( Message.responseURI );
-	// message of unknown length until serialized
-	this.writeU32( -1 );
+	// message of unknown length until serialized (U32)-1
+	this.s += '\xFF\xFF\xFF\xFF';
 	// switch version if AMF3
 	if( v === amf.AMF3 ){
 		this.writeU8( amf.AMF0_AMV_PLUS );
@@ -283,7 +282,7 @@ AMFSerializer.prototype.writeDouble = function( value, writeMarker ){
 		this.s += '\0\0\0\0\0\0\xF8\x7F';
 	}
 	else {
-		this.s += this.binParser.fromDouble( value );
+		this.s += this.leParser.fromDouble( value );
 	}
 	return this.s;
 }
@@ -292,21 +291,21 @@ AMFSerializer.prototype.writeDouble = function( value, writeMarker ){
 
 /** */
 AMFSerializer.prototype.writeU8 = function( n ){
-	return this.s += pack('C', n );
+	return this.s += this.beParser.fromByte(n); 
 }
 
 
 
 /** */
 AMFSerializer.prototype.writeU16 = function( n ){
-	return this.s += pack('n',n);
+	return this.s += this.beParser.fromWord(n); 
 }
 
 
 
 /** */
 AMFSerializer.prototype.writeU32 = function( n ){
-	return this.s += pack('N',n);
+	return this.s += this.beParser.fromDWord(n); 
 }
 
 
