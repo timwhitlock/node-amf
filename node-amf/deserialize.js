@@ -2,7 +2,6 @@
  * AMF deserializer
  */
 
-
 /** dependencies */ 
 var amf = require('./amf');
 var utils = require('./utils');
@@ -194,7 +193,7 @@ AMFDeserializer.prototype.readValue = function( version ){
 		case amf.AMF3_ARRAY:
 			return this.readArray();
 		case amf.AMF3_OBJECT:
-			return this.readObject();
+			return this.readObject( amf.AMF3 );
 		case amf.AMF3_DATE:
 			return this.readDate();
 		case amf.AMF3_BYTE_ARRAY:
@@ -220,6 +219,8 @@ AMFDeserializer.prototype.readValue = function( version ){
 			return this.readStrictArray();
 		case amf.AMF0_DATE:
 			return this.readDate();	
+		case amf.AMF0_OBJECT:
+			return this.readObject( amf.AMF0 );			
 		default:
 			throw new Error('Type error, unsupported AMF0 marker: 0x' +utils.leftPad(marker.toString(16),2,'0')+ ', offset '+this.i);
 		}
@@ -277,7 +278,21 @@ AMFDeserializer.prototype.readArray = function(){
 
 
 /** */
-AMFDeserializer.prototype.readObject = function(){
+AMFDeserializer.prototype.readObject = function( version ){
+	var prop, Obj = {};
+	// support AMF0 objects
+	if( version === amf.AMF0 ){
+		while( prop = this.readUTF8( amf.AMF0 ) ){
+			Obj[prop] = this.readValue( amf.AMF0 );
+		}
+		// next must be object end marker
+		var end = this.readU8();
+		if( end !== amf.AMF0_OBJECT_END ){
+			throw new Error('Expected object end marker, got 0x'+end.toString(16) );
+		}
+		return Obj;
+	}
+	// else assume AMF3
 	var Traits;
 	// check if instance follows (U29O-traits)
 	var n = this.readU29();
@@ -315,7 +330,6 @@ AMFDeserializer.prototype.readObject = function(){
 		}
 		// Have traits - Construct instance
 		// @todo support class mapping somehow?
-		var prop, Obj = {};
 		this.refObj.push( Obj );	
 		for( var i = 0; i < Traits.props; i++ ){
 			prop = Traits.props[i];

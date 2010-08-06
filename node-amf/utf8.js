@@ -106,7 +106,7 @@ exports.collapse = function( s ){
 			// get trailing 10xxxxxx byte
 			var m = peek();
 			if( ( m & 192 ) !== 128 ){
-				throw new Error('Invalid character #'+m+' "'+String.fromCharCode(m)+'" at offset '+i);
+				throw new Error('Invalid byte 0x'+m.toString(16).toUpperCase()+' "'+String.fromCharCode(m)+'" at offset '+i);
 			}
 			t <<= 6;
 			t |= ( m & 63 ); 

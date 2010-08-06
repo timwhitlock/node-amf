@@ -26,19 +26,20 @@ var leParser = bin.parser( false, true ); // little endian binary parser
  * Constructor
  */
 function RtmpChunk( data ){
-	// sniff data to determine chunk id
+	// 6.1.1 chunk basic header - defines stream id and chunk type
 	var b1 = data.charCodeAt(0);
 	this.chunkStreamId = b1 & 63; // <- (0-5) 6 bit mask
-	// two byte header with 0 @todo TEST ME
+	// two byte header with 0: stream id between 64-319 @todo TEST ME
 	if( this.chunkStreamId === 0 ){
-		this.chunkStreamId = data.charCodeAt(1);
+		this.chunkStreamId = data.charCodeAt(1) + 64;
 		this.offset = 2;
 	}	
-	// three byte header with 1 @todo TEST ME
+	// three byte header with 1: stream ids between 64-65599 @todo TEST ME
 	else if( this.chunkStreamId === 1 ){
-		this.chunkStreamId = ( data.charCodeAt(1) << 8 ) | data.charCodeAt(2);
+		this.chunkStreamId = ( data.charCodeAt(2) * 256 ) + data.charCodeAt(1) + 64;
 		this.offset = 3;
 	}
+	// 1 byte header - stream id between 2-63
 	else {
 		this.offset = 1;
 	}
@@ -127,6 +128,7 @@ RtmpChunk.prototype.parse = function( data ){
 	if( this.timestamp === 0x00ffffff ){
 		throw new Error('@todo extended timestamp');
 	}
+	
 	// Snip off the message data, and return the next chunk
 	//this.message = data.substr( this.offset + this.headerLen, this.messageLen );
 	//return data.slice( this.offset + this.headerLen + this.messageLen );

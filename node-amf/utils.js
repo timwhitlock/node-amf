@@ -67,6 +67,9 @@ exports.hex = function( bin, cols ){
 			line = [];
 			i = 0;
 		}
+		else if( i % 8 === 0 ){
+			s += ' ';
+		}
 	}
 	// pick up remainder
 	if( line.length ){

@@ -33,12 +33,14 @@ function RtmpHandshake( data ){
 
 
 /**
- * time elapsed since benchmark was taken with 0 epoch
  * @return Number
  */
-RtmpHandshake.prototype.timestamp = function(){
-	var t = (new Date).getTime();
-	return ( t - this.serverBench ) - this.serverEpoch;
+RtmpHandshake.prototype.timestamp = function( t ){
+	if( t == null ){
+		t = (new Date).getTime();
+	}
+	var delta = t - this.serverBench;
+	return delta;
 }
 
 
@@ -67,6 +69,9 @@ RtmpHandshake.prototype.initialize = function( data ){
 	this.clientEpochStr = data.slice(1,5);
 	this.clientEpoch = beParser.toInt( this.clientEpochStr );
 	this.clientRandom = data.slice(9);
+	// @todo whould we mirror the client's epoch??
+	//this.serverEpochStr = this.clientEpochStr;
+	//this.serverEpoch = this.clientEpoch;
 	// return S0 + S1 packet to respond with
 	return '\3' + this.serverEpochStr + '\0\0\0\0' + this.serverRandom;
 }
@@ -86,8 +91,8 @@ RtmpHandshake.prototype.acknowledge = function( data ){
 	this.clientBench = beParser.toInt( data.slice(4,8) ); // always seems to be zero?
 	// return S2 packet to respond with
 	this.acknowledged = true;
-	// @todo unsure about this timestamp as it will be zero ??
-	var time2 = 0;
+	// @todo unsure about this timestamp as it will be equal to the epoch
+	var time2 = this.timestamp( this.serverBench );
 	return this.clientEpochStr + beParser.fromDWord(time2) + this.clientRandom;
 }
 

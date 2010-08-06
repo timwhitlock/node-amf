@@ -14,7 +14,8 @@ exports.RtmpMessage = RtmpMessage;
 
 
 // utility to unpack numbers
-var binParser = bin.parser( true, true );
+var beParser = bin.parser( true, true );
+var leParser = bin.parser( false, true );
 
 
 
@@ -22,13 +23,26 @@ var binParser = bin.parser( true, true );
  * Constructor
  */
 function RtmpMessage( data ){
-	// 4.1. messages have a fixed header of 11 bytes
-	this.type = binParser.toByte( data.slice(0,1) );
-	this.length = binParser.decodeInt( data.slice(1,4), 24, false );
-	this.timestamp = binParser.toDWord( data.slice(4,8) );
-	this.streamId = binParser.decodeInt( data.slice(8,11), 24, false );
+	// 4.1. messages begin with a type - dictates payload structure
+	this.type = beParser.toByte( data.slice(0,1) );
+	/*
+	this.length = beParser.decodeInt( data.slice(1,4), 24, false );
+	this.timestamp = beParser.decodeInt( data.slice(4,8), 32, false );
+	this.streamId = leParser.decodeInt( data.slice(8,11), 24, false ); // <- BE/LE??
 	this.payload = data.slice(11);
-	//sys.puts( utils.hex( this.payload ) );
-	//var Des = amf.deserializer( this.payload );
+	*/
+	
+	// type 2: message is an AMF encoded command from the client
+	// @todo test message type from chunk to determine AMF0/AMF3
+	if( this.type === 2 ){
+		var str = data.slice(1);
+		var des = amf.deserializer( str );
+		var cmd = des.readUTF8( amf.AMF0 );
+		sys.puts('command = ' + cmd );
+		var unknown = des.shiftBytes( 9 );
+		sys.puts( utils.hex(unknown) );
+		var obj = des.readValue( amf.AMF0 );
+		sys.puts( sys.inspect(obj) );
+	}
 	
 }

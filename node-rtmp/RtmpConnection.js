@@ -85,7 +85,7 @@ RtmpConnection.prototype.onSocketData = function( data ){
 		}
 		while( data ){
 			sys.puts('# processing chunk, have '+data.length+' bytes');
-			sys.puts( utils.hex(data) );
+			sys.puts( utils.hex(data,16) );
 			// process a chunk
 			var Chunk = new RtmpChunk( data );
 			// add to stream and inherit any known properties
@@ -99,15 +99,23 @@ RtmpConnection.prototype.onSocketData = function( data ){
 			Stream.push( Chunk );
 			// parse chunk returning any leftover chunk data
 			data = Chunk.parse( data );
+			sys.puts( sys.inspect(Chunk) );
 		}
 	}
 	catch( Er ){
 		sys.puts( 'Error onSocketData: '+Er.message );
 	}
 	// @todo I AM HERE - testing message parsing with first single message chunk
+		
+	// @todo getting rogue 0xC3 bytes - something to do with byte allignment?
+	if( Chunk.messageLen < Chunk.message.length ){
+		sys.puts( Chunk.messageLen +' < '+ Chunk.message.length );
+		// hack out 0xC3s?????
+		Chunk.message = Chunk.message.split('\xC3').join('');
+	}
+	
+	
 	var Msg = new RtmpMessage( Chunk.message );
-	sys.puts( sys.inspect(Chunk) );
-	sys.puts( sys.inspect(Msg) );
 }
 
 
