@@ -23,7 +23,7 @@ exports.start = function( listenPort, listenHost, methods, timeout ){
 	//server.addListener( 'connection', function( conn ){ sys.puts('[server.connection]'); } );
 	//server.addListener( 'close', function( errno ){ sys.puts('[server.close]'); } );
 	server.listen( listenPort, listenHost );
-	sys.puts('AMF gateway listening on : '+listenHost+':'+listenPort);
+	sys.log('AMF gateway listening on : '+listenHost+':'+listenPort);
 	return true;
 	
 	/** 
@@ -78,7 +78,7 @@ exports.start = function( listenPort, listenHost, methods, timeout ){
 					}
 					// errors respond with an onStatus method request to the client - no responseURI required
 					catch( Er ){
-						sys.puts('Error on request message "'+requestMessage.requestURI+'": ' + Er.message);
+						console.warn('Error on request message "'+requestMessage.requestURI+'": ' + Er.message);
 						responseMessage = amf.message( Er.message, uri+'/onStatus', '' );
 						responsePacket.messages.push( responseMessage );
 					}
@@ -113,7 +113,7 @@ exports.start = function( listenPort, listenHost, methods, timeout ){
 						}
 					}
 					catch( Er ){
-						sys.puts('Error on AMF method: ' + Er.message);
+						console.warn('Error on AMF method: ' + Er.message);
 						callback( Er.message, 'onStatus' );
 					}
 				}
@@ -130,16 +130,19 @@ exports.start = function( listenPort, listenHost, methods, timeout ){
 					res.write( bin, "binary" );
 					res.end();
 				}
-				// process queue without a nested call stack
+				// process queue without a recursive call stack
 				var qlen = queue.length, processed = 0;
-				for( var  i = 0; i < qlen; i++ ){
+				for( var i = 0; i < qlen; i++ ){
 					setTimeout( shiftQueue, 0 );
+				}
+				if( ! qlen ){
+					throw new Error('no messages to process');
 				}
 			}
 			catch( e ){
-				sys.puts( 'Error: ' + e.message );
+				console.warn( 'Error: ' + e.message );
 				res.writeHead( 500, {'Content-Type': 'text/plain'} );
-				res.write( 'Error serializing AMF packet:\n' + e.message );
+				res.write( 'Error on AMF packet:\n' + e.message );
 				res.end();
 			}
 		} );
