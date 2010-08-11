@@ -54,6 +54,10 @@ package {
 			var cyclicArr = [ 'hello world' ];
 			cyclicArr.push( cyclicArr );
 			call( "echo", responder, cyclicObj, cyclicArr );
+			// test an async function that cannot return immediately
+			call( "testAsync", responder );
+			// test a function that will timeout
+			//call( "testDead", responder );
 		}
 		
 		

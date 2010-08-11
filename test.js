@@ -97,10 +97,8 @@ try {
 	Packet.addHeader( 'header 1', 'Example header 1' );
 	Packet.addHeader( 'header 2', 'Example header 2' );
 	
-	// this is the standard requestURI that Flash would expect in a *response*
+	// Dummy request/response URIs
 	var requestURI = '/1/onResult';
-	
-	// responseURI in this context is redundant @todo actually I'm confused about what this is
 	var responseURI = '/1';
 	
 	// add construct as a single AMF message and return serialized, binary string

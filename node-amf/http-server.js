@@ -16,7 +16,7 @@ var utils = require('./utils');
  * @param Object an object containing available gateway methods
  * @return bool
  */
-exports.start = function( listenPort, listenHost, methods ){
+exports.start = function( listenPort, listenHost, methods, timeout ){
 
 	var server = http.createServer();
 	server.addListener( 'request', onRequest );
@@ -58,46 +58,90 @@ exports.start = function( listenPort, listenHost, methods ){
 				responsePacket.version = requestPacket.version;
 
 				// process all messages as function calls
-				var requestMessage, responseMessage, func, args, retval;
+				var requestMessage, responseMessage, func, args, uri;
+				// queue up all web service calls to be executed asynchronously
+				var queue = [];
 				for( var m in requestPacket.messages ){
 					requestMessage = requestPacket.messages[m];
 					try {
 						// get function to call and arguments to pass from request message
 						func = methods[ requestMessage.requestURI ];
+						args = requestMessage.value;
+						uri = requestMessage.responseURI;
 						if( typeof func !== 'function' ){
 							throw new Error('No such method "'+requestMessage.requestURI+'"');
 						}
-						args = requestMessage.value;
 						if( typeof args !== 'object' && typeof args.push !== 'function' ){
 							throw new Error('Arguments to "'+requestMessage.requestURI+'" must be sent as an array');
 						}
-						// call function and create response message with return value
-						retval = func.apply( null, args );
-						responseMessage = amf.message( retval, requestMessage.responseURI+'/onResult', '' );
+						queue.push( [ uri, func, args ] );
 					}
 					// errors respond with an onStatus method request to the client - no responseURI required
 					catch( Er ){
-						sys.puts('Error: ' + Er.message);
-						responseMessage = amf.message( Er.message, requestMessage.responseURI+'/onStatus', '' );
+						sys.puts('Error on request message "'+requestMessage.requestURI+'": ' + Er.message);
+						responseMessage = amf.message( Er.message, uri+'/onStatus', '' );
+						responsePacket.messages.push( responseMessage );
 					}
-					responsePacket.messages.push( responseMessage );
 				}
-				// flush HTTP response
-				var bin = responsePacket.serialize();
-				//sys.puts( utils.hex(bin) );
-				//sys.puts( sys.inspect(responsePacket) );
-				res.writeHead( 200, {
-					'Content-Type': 'application/amf',
-					'Content-Length': bin.length 
-				} );
-				res.write( bin, "binary" );
+				// execute all web services, responding only when all are complete
+				function shiftQueue(){
+					var q = queue.shift();
+					var uri = q[0], func = q[1], args = q[2];
+					function callback( value, func ){
+						func = func || 'onResult';
+						// ensure callback isn't executed twice
+						if( uri !== null ){ 
+							clearTimeout(t);
+							responseMessage = amf.message( value, uri+'/'+func, '' );
+							responsePacket.messages.push( responseMessage );
+							url = null;
+							if( ++processed === qlen ){
+								respond();
+							}
+						}
+					}
+					function onTimeout(){
+						callback('method timeout', 'onStatus');
+					}
+					// hand off to method - any return value other than undefined assume to be a syncronous method
+					try {
+						args.unshift( callback );
+						var t = setTimeout( onTimeout, timeout || 10000 );
+						var value = func.apply( null, args );
+						if( value !== undefined ){
+							callback( value );
+						}
+					}
+					catch( Er ){
+						sys.puts('Error on AMF method: ' + Er.message);
+						callback( Er.message, 'onStatus' );
+					}
+				}
+				// final response when all messages have been processed
+				function respond(){
+					// flush HTTP response
+					var bin = responsePacket.serialize();
+					//sys.puts( utils.hex(bin) );
+					//sys.puts( sys.inspect(responsePacket) );
+					res.writeHead( 200, {
+						'Content-Type': 'application/amf',
+						'Content-Length': bin.length 
+					} );
+					res.write( bin, "binary" );
+					res.end();
+				}
+				// process queue without a nested call stack
+				var qlen = queue.length, processed = 0;
+				for( var  i = 0; i < qlen; i++ ){
+					setTimeout( shiftQueue, 0 );
+				}
 			}
 			catch( e ){
 				sys.puts( 'Error: ' + e.message );
 				res.writeHead( 500, {'Content-Type': 'text/plain'} );
 				res.write( 'Error serializing AMF packet:\n' + e.message );
+				res.end();
 			}
-			res.end();
 		} );
 	}
 	
