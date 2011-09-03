@@ -187,12 +187,11 @@ AMFSerializer.prototype.writeArray = function( value ){
 	if( this.version === amf.AMF3 ){
 		this.writeU8( amf.AMF3_ARRAY );
 		// support object references
-		if( value.__amfidx != null ){
-			var n = ( value.__amfidx << 1 );
-			return this.writeU29( n );
+		var n = this.refObj.indexOf( value );
+		if( n != -1){
+			return this.writeU29( n << 1);
 		}
 		// else index object reference
-		value.__amfidx = this.refObj.length;
 		this.refObj.push( value );
 		// flag with XXXXXXX1 indicating length of dense portion with instance
 		var flag = ( len << 1 ) | 1;
@@ -221,19 +220,18 @@ AMFSerializer.prototype.writeObject = function( value ){
 	}
 	this.writeU8( amf.AMF3_OBJECT );
 	// support object references
-	if( value.__amfidx != null ){
-		var n = ( value.__amfidx << 1 );
-		return this.writeU29( n );
+	var n = this.refObj.indexOf( value );
+	if( n != -1 ){
+		return this.writeU29( n << 1 );
 	}
 	// else index object reference
-	value.__amfidx = this.refObj.length;
 	this.refObj.push( value );
 	// flag with instance, no traits, no externalizable
 	this.writeU29( 11 );
 	this.writeUTF8('Object');
 	// write serializable properties
 	for( var s in value ){
-		if( typeof value[s] !== 'function' && s !== '__amfidx' ){
+		if( typeof value[s] !== 'function' ){
 			this.writeUTF8(s);
 			this.writeValue( value[s] );
 		}

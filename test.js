@@ -42,8 +42,10 @@ var tests = [
 	['date object (now)', new Date() ],
 	// plain objects
 	['empty object', {} ],
-	['keyed object', { foo:'bar', 'foo bar':'baz' } ]
+	['keyed object', { foo:'bar', 'foo bar':'baz' } ],
+	['refs object', { foo: _ = { a: 12 }, bar: _ } ]
 ];
+
 
 
 
@@ -58,6 +60,8 @@ for( var t = 0, n = 0; t < tests.length; t++ ){
 		var s = sys.inspect(value).replace(/\n/g,' ');
 		sys.puts( ' > ' +descr+ ': ' + s);
 		// serialize and show AMF packet
+		// serializing twice must not affect results
+		amf.serializer().writeValue( value );
 		var Ser = amf.serializer();
 		var bin = Ser.writeValue( value );
 		//sys.puts( utils.hex(bin,16) );
