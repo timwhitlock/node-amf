@@ -230,12 +230,20 @@ AMFSerializer.prototype.writeObject = function( value ){
 	this.refObj.push( value );
 	// flag with instance, no traits, no externalizable
 	this.writeU29( 11 );
-	this.writeUTF8('Object');
+	// Override object type if present
+	if(value['type'] != null) {
+		this.writeUTF8(value['type']);
+	} else {
+		this.writeUTF8('Object');
+	}
 	// write serializable properties
 	for( var s in value ){
-		if( typeof value[s] !== 'function' && s !== '__amfidx' ){
-			this.writeUTF8(s);
-			this.writeValue( value[s] );
+		// skip override type parameter
+		if( s != 'type' ) {
+			if( typeof value[s] !== 'function' && s !== '__amfidx' ){
+				this.writeUTF8( s );
+				this.writeValue( value[s] );
+			}
 		}
 	}
 	// terminate dynamic props with empty string
