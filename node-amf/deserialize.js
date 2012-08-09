@@ -77,7 +77,9 @@ AMFDeserializer.prototype.readU32 = function(){
 /** */
 AMFDeserializer.prototype.readDouble = function(){
 	var s = this.shiftBytes(8);
-	return this.leParser.toDouble( s );
+	//return this.leParser.toDouble( s );
+	// FIXME:abrod trying this out
+	return this.beParser.toDouble( s );
 }
 
 
@@ -312,6 +314,7 @@ AMFDeserializer.prototype.readObject = function( version ){
 			else {
 				Traits.dyn = Boolean( n & 8 );
 				Traits.clss = this.readUTF8( amf.AMF3 );
+				console.log("Reading Traits.clss:" +Traits.clss)
 				// iterate over declared member names
 				var proplen = n >> 4;
 				for( var i = 0, prop; i < proplen; i++ ){
@@ -335,6 +338,12 @@ AMFDeserializer.prototype.readObject = function( version ){
 			prop = Traits.props[i];
 			Obj[prop] = this.readValue( amf.AMF3 );
 		}
+		// FIXME:abrod - adding type so we can remember it and pass back to origin
+		if( Traits.clss){
+			console.log("Adding type:"+Traits.clss)
+			Obj["type"] = Traits.clss;
+		}
+
 		// iterate over dynamic properties until empty string
 		if( Traits.dyn ){
 			while( prop = this.readUTF8( amf.AMF3 ) ){
