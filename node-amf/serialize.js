@@ -282,7 +282,7 @@ AMFSerializer.prototype.writeDouble = function( value, writeMarker ){
 		this.s += '\0\0\0\0\0\0\xF8\x7F';
 	}
 	else {
-		this.s += this.leParser.fromDouble( value );
+		this.s += this.beParser.fromDouble( value );
 	}
 	return this.s;
 }
