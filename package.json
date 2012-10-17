@@ -1,0 +1,6 @@
+{
+  "author": "Tim Whitlock <@timwhitlock> (http://timwhitlock.info/)",
+  "name": "node-amf",
+  "description": "A node AMF library",
+  "version": "0.0.1"
+}
