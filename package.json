@@ -1,5 +1,5 @@
 {
-  "name": "amf",
+  "name": "amflib",
   "version": "1.0.0",
   "author": "Tim Whitlock (http://timwhitlock.info)",
   "description": "AMF library for NodeJS",
