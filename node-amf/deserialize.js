@@ -77,7 +77,7 @@ AMFDeserializer.prototype.readU32 = function(){
 /** */
 AMFDeserializer.prototype.readDouble = function(){
 	var s = this.shiftBytes(8);
-	return this.leParser.toDouble( s );
+	return this.beParser.toDouble( s );
 }
 
 
