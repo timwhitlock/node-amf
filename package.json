@@ -1,7 +1,7 @@
 {
   "name": "amf",
   "version": "1.0.0",
-  "author": "Tim Whitlock",
+  "author": "Tim Whitlock (http://timwhitlock.info)",
   "description": "AMF library for NodeJS",
   "scripts": {
     "test": "node test.js"
