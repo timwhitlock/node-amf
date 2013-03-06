@@ -1,13 +1,8 @@
 {
-  "name": "node-amf",
-  "version": "0.1.0",
+  "name": "amf",
+  "version": "1.0.0",
   "author": "Tim Whitlock",
   "description": "AMF library for NodeJS",
-  "contributors": [ 
-    {
-      "name": "Tim Whitlock"
-    } 
-  ],
   "scripts": {
     "test": "node test.js"
   },
@@ -18,8 +13,7 @@
   },
   "keywords": [
     "flash",
-    "AMF",
-    "server"
+    "AMF"
   ],
   "license": "MIT",
   "engines": {
