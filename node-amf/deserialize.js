@@ -334,7 +334,7 @@ AMFDeserializer.prototype.readObject = function( version ){
 		// Have traits - Construct instance
 		// @todo support class mapping somehow?
 		this.refObj.push( Obj );	
-		for( var i = 0; i < Traits.props; i++ ){
+		for( var i = 0; i < Traits.props.length; i++ ){
 			prop = Traits.props[i];
 			Obj[prop] = this.readValue( amf.AMF3 );
 		}
