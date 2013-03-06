@@ -77,6 +77,9 @@ AMFDeserializer.prototype.readU32 = function(){
 /** */
 AMFDeserializer.prototype.readDouble = function(){
 	var s = this.shiftBytes(8);
+	if( '\0\0\0\0\0\0\xF8\x7F' === s ){
+		return Number.NaN;
+	}
 	return this.beParser.toDouble( s );
 }
 
