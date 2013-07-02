@@ -60,6 +60,8 @@ for( var t = 0, n = 0; t < tests.length; t++ ){
 		var value = tests[t][1];
 		var s = sys.inspect(value).replace(/\n/g,' ');
 		sys.puts( ' > ' +descr+ ': ' + s);
+		// serializing twice must not affect results
+		amf.serializer().writeValue( value );
 		// serialize and show AMF packet
 		var Ser = amf.serializer();
 		var bin = Ser.writeValue( value );
