@@ -45,6 +45,7 @@ var tests = [
 	// plain objects
 	['empty object', {} ],
 	['keyed object', { foo:'bar', 'foo bar':'baz' } ],
+	['refs object', { foo: _ = { a: 12 }, bar: _ } ]
 ];
 
 
