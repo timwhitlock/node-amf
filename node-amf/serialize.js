@@ -315,7 +315,8 @@ AMFSerializer.prototype.writeU29 = function( n, writeMarker ){
 	// unsigned range: 0 -> pow(2,29)-1; 0 -> 0x1FFFFFFF
 	// signed range: -pow(2,28) -> pow(2,28)-1; -0x10000000 -> 0x0FFFFFFF
 	if( n < 0 ){
-		n += 0x20000000;
+        throw new Error('U29 range error, '+n+' < 0');
+        //n += 0x20000000;
 	}
 	var a, b, c, d;
 	if( n < 0x00000080 ){
@@ -337,16 +338,14 @@ AMFSerializer.prototype.writeU29 = function( n, writeMarker ){
 	}
 	else if( n < 0x20000000 ){
 		//                                        0x80-FF  0x80-FF  0x80-FF  0x00-FF
-		// 00AAAAAA AABBBBBB BCCCCCCC DDDDDDDD -> 1AAAAAAA 1BBBBBBB 1CCCCCCC DDDDDDDD
+		// 000AAAAA AABBBBBB BCCCCCCC DDDDDDDD -> 1AAAAAAA 1BBBBBBB 1CCCCCCC DDDDDDDD
 		d = n & 0xFF;
 		c = 0x80 | ( (n>>=8) & 0x7F ); 
 		b = 0x80 | ( (n>>=7) & 0x7F );
 		a = 0x80 | ( (n>>=7) & 0x7F );
 	}
 	else {
-		// U29 range error, trying double;
-		//return this.writeDouble( n );
-		throw new Error('U29 range error');
+		throw new Error('U29 range error, '+n+' > 0x1FFFFFFF');
 	}
 	if( writeMarker ){
 		this.writeU8( amf.AMF3_INTEGER );

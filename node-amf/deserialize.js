@@ -90,24 +90,25 @@ AMFDeserializer.prototype.readU29 = function(){
 	var n = 0;
 	var t = 0;
 	while ( true ){
-		if( t++ === 4 ){
+		if( ++t === 5 ){
 			throw new Error("U29 range error, offset "+this.i);
 		}
 		i = this.readU8();
-		// next byte is part of the sequence if high bit is set
-		if( i & 0x80 && t !== 4 ){
-			n = ( n << 7) | (i & 0x7F);
+		// final whole byte if fourth bit
+		if( 4 === t ){
+		    n = i | ( n << 1 );
+ 		    break;
+		}
+		// else take just 7 bits
+        n |= ( i & 0x7F );
+        // next byte is part of the sequence if high bit is set
+		if( i & 0x80 ){
+		    n <<= 7;
 			continue;
 		}
-		// else is final, partial byte
-		else if ( t !== 4 ){
-			n = (n << 7) | i;
-			break;
-		}
-		// else is final, full byte
+		// else is final byte
 		else {
-			n = (n << 8) | i;
-			break;
+    		break;
 		}
 	}
 	return n;
@@ -122,12 +123,8 @@ AMFDeserializer.prototype.readInteger = function( version ){
 	if( version === amf.AMF0 ){
 		return this.readDouble();
 	}
-	// else convert AMF3 U29 to native signed
-	var n = this.readU29();
-	if( n > 0x0FFFFFFF ){
-		n -= 0x20000000;
-	}
-	return n;
+	// else AMF3 U29
+	return this.readU29();
 }
 
 
