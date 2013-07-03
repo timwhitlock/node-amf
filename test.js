@@ -23,8 +23,9 @@ var tests = [
     ['integer in 2 byte u29 range', 0x00003FFF ],
     ['integer in 3 byte u29 range', 0x001FFFFF ],
     ['integer in 4 byte u29 range', 0x1FFFFFFF ],
+    ['large integer', 4294967296 ],
+    ['large negative integer', -4294967296 ],
 	['small negative integer', -1 ],
-	['large negative integer', -4294967296 ],
 	['small floating point', 0.123456789 ],
 	['small negative floating point', -0.987654321 ],
 	['Number.MIN_VALUE', Number.MIN_VALUE ],
@@ -45,8 +46,7 @@ var tests = [
 	// plain objects
 	['empty object', {} ],
 	['keyed object', { foo:'bar', 'foo bar':'baz' } ],
-	['refs object', { foo: _ = { a: 12 }, bar: _ } ],
-	['issue #10', 289764372 ]
+	['refs object', { foo: _ = { a: 12 }, bar: _ } ]
 ];
 
 
