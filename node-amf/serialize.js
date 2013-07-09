@@ -187,12 +187,11 @@ AMFSerializer.prototype.writeArray = function( value ){
 	if( this.version === amf.AMF3 ){
 		this.writeU8( amf.AMF3_ARRAY );
 		// support object references
-		if( value.__amfidx != null ){
-			var n = ( value.__amfidx << 1 );
-			return this.writeU29( n );
-		}
+        var n = this.refObj.indexOf( value );
+        if( n !== -1 ){
+            return this.writeU29( n << 1 );
+        }
 		// else index object reference
-		value.__amfidx = this.refObj.length;
 		this.refObj.push( value );
 		// flag with XXXXXXX1 indicating length of dense portion with instance
 		var flag = ( len << 1 ) | 1;
@@ -221,12 +220,11 @@ AMFSerializer.prototype.writeObject = function( value ){
 	}
 	this.writeU8( amf.AMF3_OBJECT );
 	// support object references
-	if( value.__amfidx != null ){
-		var n = ( value.__amfidx << 1 );
-		return this.writeU29( n );
-	}
+    var n = this.refObj.indexOf( value );
+    if( n !== -1 ){
+        return this.writeU29( n << 1 );
+    }
 	// else index object reference
-	value.__amfidx = this.refObj.length;
 	this.refObj.push( value );
 	// flag with instance, no traits, no externalizable
 	this.writeU29( 11 );
@@ -238,12 +236,9 @@ AMFSerializer.prototype.writeObject = function( value ){
 	}
 	// write serializable properties
 	for( var s in value ){
-		// skip override type parameter
-		if( s != 'type' ) {
-			if( typeof value[s] !== 'function' && s !== '__amfidx' ){
-				this.writeUTF8( s );
-				this.writeValue( value[s] );
-			}
+		if( typeof value[s] !== 'function' ){
+			this.writeUTF8(s);
+			this.writeValue( value[s] );
 		}
 	}
 	// terminate dynamic props with empty string
@@ -323,7 +318,8 @@ AMFSerializer.prototype.writeU29 = function( n, writeMarker ){
 	// unsigned range: 0 -> pow(2,29)-1; 0 -> 0x1FFFFFFF
 	// signed range: -pow(2,28) -> pow(2,28)-1; -0x10000000 -> 0x0FFFFFFF
 	if( n < 0 ){
-		n += 0x20000000;
+        throw new Error('U29 range error, '+n+' < 0');
+        //n += 0x20000000;
 	}
 	var a, b, c, d;
 	if( n < 0x00000080 ){
@@ -345,16 +341,14 @@ AMFSerializer.prototype.writeU29 = function( n, writeMarker ){
 	}
 	else if( n < 0x20000000 ){
 		//                                        0x80-FF  0x80-FF  0x80-FF  0x00-FF
-		// 00AAAAAA AABBBBBB BCCCCCCC DDDDDDDD -> 1AAAAAAA 1BBBBBBB 1CCCCCCC DDDDDDDD
+		// 000AAAAA AABBBBBB BCCCCCCC DDDDDDDD -> 1AAAAAAA 1BBBBBBB 1CCCCCCC DDDDDDDD
 		d = n & 0xFF;
 		c = 0x80 | ( (n>>=8) & 0x7F ); 
 		b = 0x80 | ( (n>>=7) & 0x7F );
 		a = 0x80 | ( (n>>=7) & 0x7F );
 	}
 	else {
-		// U29 range error, trying double;
-		//return this.writeDouble( n );
-		throw new Error('U29 range error');
+		throw new Error('U29 range error, '+n+' > 0x1FFFFFFF');
 	}
 	if( writeMarker ){
 		this.writeU8( amf.AMF3_INTEGER );

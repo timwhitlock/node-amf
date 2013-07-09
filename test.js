@@ -19,10 +19,13 @@ var tests = [
 	['unicode string', '£今\u4ECA"\u65E5日'],
 	// numbers
 	['zero',  0 ],
-	['small integer', 123 ],
-	['small negative integer', -456 ],
-	['large integer', 4294967296 ],
-	['large negative integer', -4294967296 ],
+    ['integer in 1 byte u29 range', 0x7F ],
+    ['integer in 2 byte u29 range', 0x00003FFF ],
+    ['integer in 3 byte u29 range', 0x001FFFFF ],
+    ['integer in 4 byte u29 range', 0x1FFFFFFF ],
+    ['large integer', 4294967296 ],
+    ['large negative integer', -4294967296 ],
+	['small negative integer', -1 ],
 	['small floating point', 0.123456789 ],
 	['small negative floating point', -0.987654321 ],
 	['Number.MIN_VALUE', Number.MIN_VALUE ],
@@ -42,7 +45,8 @@ var tests = [
 	['date object (now)', new Date() ],
 	// plain objects
 	['empty object', {} ],
-	['keyed object', { foo:'bar', 'foo bar':'baz' } ]
+	['keyed object', { foo:'bar', 'foo bar':'baz' } ],
+	['refs object', { foo: _ = { a: 12 }, bar: _ } ]
 ];
 
 
@@ -57,6 +61,8 @@ for( var t = 0, n = 0; t < tests.length; t++ ){
 		var value = tests[t][1];
 		var s = sys.inspect(value).replace(/\n/g,' ');
 		sys.puts( ' > ' +descr+ ': ' + s);
+		// serializing twice must not affect results
+		amf.serializer().writeValue( value );
 		// serialize and show AMF packet
 		var Ser = amf.serializer();
 		var bin = Ser.writeValue( value );
@@ -112,7 +118,8 @@ try {
 	
 	// dump test packet in hex display
 	var bin = Packet.serialize();
-	//sys.puts( utils.hex( bin ) );
+    sys.puts(' > Packet serialization ok');
+    //sys.puts( utils.hex( bin ) );
 }
 catch( Er ){
 	sys.puts('***FAIL*** error serializing packet: ' + Er.message );
@@ -123,6 +130,7 @@ catch( Er ){
 // now attempt to deserialize the packet and get the data back
 try {
 	Packet = amf.packet( bin );
+    sys.puts(' > Packet deserialization ok');
 	//sys.puts( sys.inspect(Packet) );
 }
 catch( Er ){
@@ -131,7 +139,6 @@ catch( Er ){
 }
 
 
-sys.puts('All tests ok.');
 
 
 
