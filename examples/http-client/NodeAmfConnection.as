@@ -42,7 +42,7 @@ package {
 				 //strings
 				 'Hello World', 'a£b', 
 				 // numbers
-				 Number.MIN_VALUE, -1234.5, -20000, -1, 0, 0.0123456, 2000000, 1234.5678, Number.MAX_VALUE, Number.NaN,
+				 Number.MIN_VALUE, -1234.5, -20000, -1, 0, 0.0123456, 2000000, 289764372, 1234.5678, Number.MAX_VALUE, Number.NaN,
 				 // objects 
 				 [ ,,{ test:'OK'}, new Date, new Date(0) ],
 				 // other scalars

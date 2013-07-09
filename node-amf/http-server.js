@@ -124,7 +124,7 @@ exports.start = function( listenPort, listenHost, methods, timeout ){
 					//sys.puts( utils.hex(bin) );
 					//sys.puts( sys.inspect(responsePacket) );
 					res.writeHead( 200, {
-						'Content-Type': 'application/amf',
+						'Content-Type': 'application/x-amf',
 						'Content-Length': bin.length 
 					} );
 					res.write( bin, "binary" );

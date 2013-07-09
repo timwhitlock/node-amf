@@ -5,7 +5,7 @@
 
 // configure for your environment
 var listenPort = 8081;
-var listenHost = '192.168.51.6';
+var listenHost = '127.0.0.1';
 // maximum length of time server will wait for a method call to callback, defaults to 1000ms
 var timeout = 5000;
 
