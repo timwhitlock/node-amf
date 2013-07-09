@@ -335,7 +335,7 @@ AMFDeserializer.prototype.readObject = function( version ){
 			prop = Traits.props[i];
 			Obj[prop] = this.readValue( amf.AMF3 );
 		}
-		// FIXME:abrod - adding type so we can remember it and pass back to origin
+		// adding type to JSON object so we can remember it and pass back to server
 		if( Traits.clss){
 			Obj["type"] = Traits.clss;
 		}
