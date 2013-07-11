@@ -335,6 +335,11 @@ AMFDeserializer.prototype.readObject = function( version ){
 			prop = Traits.props[i];
 			Obj[prop] = this.readValue( amf.AMF3 );
 		}
+		// adding type to JSON object so we can remember it and pass back to server
+		if( Traits.clss){
+			Obj["type"] = Traits.clss;
+		}
+
 		// iterate over dynamic properties until empty string
 		if( Traits.dyn ){
 			while( prop = this.readUTF8( amf.AMF3 ) ){
