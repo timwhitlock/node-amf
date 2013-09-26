@@ -6,7 +6,7 @@ You're recommended to use an active fork of this library instead of this version
 I wrote this library several years ago, but I no longer do any Flash work and have no use for this library myself. 
 I don't even have a Flash compiler on my system to test pull requests.
 
-As Github doesn't provide a mechanism to retire projects, this will live here for prosperity.
+As Github doesn't provide a mechanism to retire projects, this will live here for posterity.
 
 ---
 
