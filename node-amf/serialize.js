@@ -265,7 +265,10 @@ AMFSerializer.prototype.writeDate = function( d ){
 AMFSerializer.prototype.writeNumber = function( value, writeMarker ){
 	// serialize as integers if possible
 	var n = parseInt( value );
-	if( n === value && n >= 0 && n < 0x20000000 ){
+	// NOTE: writing large integers as doubles due to https://github.com/timwhitlock/node-amf/issues/10
+	// original largest size was 0x20000000
+	if( n === value && n >= 0 && n < 0x00200000 ){
+
 		return this.writeU29( value, writeMarker );
 	}
 	return this.writeDouble( value, writeMarker );
